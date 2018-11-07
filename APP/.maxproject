@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<maxCompilerManager version="2">
+<enginePart internalEngineSubproject="MeanVarianceSkewness_EngineCode" isSrcBin="false" isUseDefaultSelected="false" outputLocation="/MeanVarianceSkewness_EngineCode/bin" projectName="MeanVarianceSkewness"/>
+<cpuPart internalCpuSubproject="MeanVarianceSkewness_CPUCode"/>
+<watchedFiles/>
+</maxCompilerManager>

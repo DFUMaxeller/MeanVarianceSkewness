@@ -1,0 +1,75 @@
+package myproject;
+
+import com.maxeler.maxcompiler.v2.kernelcompiler.Kernel;
+import com.maxeler.maxcompiler.v2.kernelcompiler.KernelParameters;
+import com.maxeler.maxcompiler.v2.kernelcompiler.types.base.DFEVar;
+import com.maxeler.maxcompiler.v2.kernelcompiler.types.composite.DFEVector;
+import com.maxeler.maxcompiler.v2.kernelcompiler.types.composite.DFEVectorType;
+import com.maxeler.maxcompiler.v2.kernelcompiler.stdlib.KernelMath;
+
+class MyProjectKernel extends Kernel {
+
+	private static final DFEType type = dfeInt(32);
+
+	protected MyProjectKernel(KernelParameters parameters, int vectorSize) {
+		super(parameters);
+
+		DFEVectorType<DFEVar> vectorType = new DFEVectorType<DFEVar>(dfeFloat(8,24), 16);
+
+		DFEVector<DFEVar> inVector = io.input("inVector", vectorType);
+
+		DFEVector<DFEVar> doubledVector =	vectorType.newInstance(this);
+
+		DFEVar sum = constant.var(dfeFloat(8,24),0.0);
+		DFEVar avg = constant.var(dfeFloat(8,24),0.0);
+		DFEVar adev = constant.var(dfeFloat(8,24),0.0);
+		DFEVar sdev = constant.var(dfeFloat(8,24),0.0);
+		DFEVar var = constant.var(dfeFloat(8,24),0.0);
+		DFEVar skew = constant.var(dfeFloat(8,24),0.0);
+		DFEVar curt = constant.var(dfeFloat(8,24),0.0);
+		DFEVar ep = constant.var(dfeFloat(8,24),0.0);
+		DFEVar p = constant.var(dfeFloat(8,24),0.0);
+
+		for (int i = 0; i < 16; i++) {
+			sum += inVector[i];
+		}
+		avg = sum/16;
+		doubledVector[0] <== sum;
+
+		for (int i = 0; i < 16; i++) {
+			sum = inVector[i]-avg;
+			adev += KernelMath.abs(sum);
+			ep += sum;
+			p = sum*sum;
+			var += p;
+			p *= sum;
+			skew += p;
+			p *= sum;
+			curt += p;
+		}
+
+		adev /= 16;
+
+		var = (var-ep*ep/16)/(16-1);
+		sdev = KernelMath.sqrt(var);
+
+		skew /= (16*(var)*(sdev));
+		curt=(curt)/(16*(var)*(var))-constant.var(dfeFloat(8,24),3.0);
+
+		doubledVector[1] <== avg;
+		doubledVector[2] <== adev;
+		doubledVector[3] <== var;
+		doubledVector[4] <== skew;
+		doubledVector[5] <== curt;
+		doubledVector[6] <== sdev;
+		for (int i = 7; i < 16; i++) {
+			doubledVector[i] <== constant.var(dfeFloat(8,24), 666666.666666);
+			//doubledVector[i] <== a;
+		}
+
+
+
+
+		io.output("outVector", doubledVector, vectorType);
+	}
+}
